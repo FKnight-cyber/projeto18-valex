@@ -1,5 +1,5 @@
-import { connection } from "../database.js";
-import { mapObjectToUpdateQuery } from "../utils/sqlUtils.js";
+import { connection } from "../../database";
+import { mapObjectToUpdateQuery } from "../utils/sqlUtils";
 
 export type TransactionTypes =
   | "groceries"
@@ -17,7 +17,6 @@ export interface Card {
   expirationDate: string;
   password?: string;
   isVirtual: boolean;
-  originalCardId?: number;
   isBlocked: boolean;
   type: TransactionTypes;
 }
@@ -76,7 +75,6 @@ export async function insert(cardData: CardInsertData) {
     expirationDate,
     password,
     isVirtual,
-    originalCardId,
     isBlocked,
     type,
   } = cardData;
@@ -84,8 +82,8 @@ export async function insert(cardData: CardInsertData) {
   connection.query(
     `
     INSERT INTO cards ("employeeId", number, "cardholderName", "securityCode",
-      "expirationDate", password, "isVirtual", "originalCardId", "isBlocked", type)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      "expirationDate", password, "isVirtual", "isBlocked", type)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
   `,
     [
       employeeId,
@@ -95,14 +93,13 @@ export async function insert(cardData: CardInsertData) {
       expirationDate,
       password,
       isVirtual,
-      originalCardId,
       isBlocked,
       type,
     ]
   );
 }
 
-export async function update(id: number, cardData: CardUpdateData) {
+export async function update(id: number, cardData: any) {
   const { objectColumns: cardColumns, objectValues: cardValues } =
     mapObjectToUpdateQuery({
       object: cardData,

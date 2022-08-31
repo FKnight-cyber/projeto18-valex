@@ -23,7 +23,6 @@ CREATE TABLE "cards"(
     "expirationDate" TEXT NOT NULL,
     "password" TEXT NULL,
     "isVirtual" BOOLEAN NOT NULL,
-    "originalCardId" INTEGER NULL REFERENCES cards(id),
     "isBlocked" BOOLEAN NOT NULL,
     "type" "transactionType" NOT NULL
 );
