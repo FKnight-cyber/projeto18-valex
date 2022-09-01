@@ -17,7 +17,8 @@ export async function findByCardId(cardId: number) {
       businesses.name as "businessName"
      FROM payments 
       JOIN businesses ON businesses.id=payments."businessId"
-     WHERE "cardId"=$1
+      JOIN cards ON cards.id = $1
+     WHERE "cardId"=$1 AND cards."isBlocked" = false
     `,
     [cardId]
   );
@@ -25,9 +26,7 @@ export async function findByCardId(cardId: number) {
   return result.rows;
 }
 
-export async function insert(paymentData: PaymentInsertData) {
-  const { cardId, businessId, amount } = paymentData;
-
+export async function insert(cardId:number, businessId:number, amount:number) {
   connection.query<any, [number, number, number]>(
     `INSERT INTO payments ("cardId", "businessId", amount) VALUES ($1, $2, $3)`,
     [cardId, businessId, amount]

@@ -10,18 +10,18 @@ export type RechargeInsertData = Omit<Recharge, "id" | "timestamp">;
 
 export async function findByCardId(cardId: number) {
   const result = await connection.query<Recharge, [number]>(
-    `SELECT * FROM recharges WHERE "cardId"=$1`,
+    `SELECT r.id, r."cardId", timestamp, amount FROM recharges r
+    JOIN cards ON cards.id = $1
+     WHERE "cardId"=$1 AND cards."isBlocked" = false`,
     [cardId]
   );
 
   return result.rows;
 }
 
-export async function insert(rechargeData: RechargeInsertData) {
-  const { cardId, amount } = rechargeData;
-
+export async function insert(id:number,amount:number) {
   connection.query<any, [number, number]>(
     `INSERT INTO recharges ("cardId", amount) VALUES ($1, $2)`,
-    [cardId, amount]
+    [id, amount]
   );
 }

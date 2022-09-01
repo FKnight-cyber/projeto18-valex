@@ -1,5 +1,4 @@
 import { connection } from "../../database";
-import { mapObjectToUpdateQuery } from "../utils/sqlUtils";
 
 export type TransactionTypes =
   | "groceries"
@@ -48,6 +47,18 @@ export async function findByTypeAndEmployeeId(
   );
 
   return result.rows[0];
+}
+
+export async function findByEmployeeId(
+  employeeId: number
+) {
+  const result = await connection.query(
+    `SELECT number,"cardholderName","expirationDate","securityCode",password FROM cards 
+    WHERE "employeeId" = $1 AND "isBlocked" is false `,
+    [employeeId]
+  );
+
+  return result;
 }
 
 export async function findByCardDetails(
@@ -99,20 +110,34 @@ export async function insert(cardData: CardInsertData) {
   );
 }
 
-export async function update(id: number, cardData: any) {
-  const { objectColumns: cardColumns, objectValues: cardValues } =
-    mapObjectToUpdateQuery({
-      object: cardData,
-      offset: 2,
-    });
-
+export async function update(id: number, password: string) {
   connection.query(
     `
     UPDATE cards
-      SET ${cardColumns}
+      SET password = $2, "isBlocked" = false
     WHERE $1=id
   `,
-    [id, ...cardValues]
+    [id,password]
+  );
+}
+
+export async function blockCard(id: number) {
+  connection.query(
+    `
+    UPDATE cards
+      SET "isBlocked" = true
+    WHERE $1=id
+  `,[id]
+  );
+}
+
+export async function unblockCard(id: number) {
+  connection.query(
+    `
+    UPDATE cards
+      SET "isBlocked" = false
+    WHERE $1=id
+  `,[id]
   );
 }
 
