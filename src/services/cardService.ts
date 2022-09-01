@@ -4,51 +4,9 @@ import * as employeeMethods from "../repositories/employeeRepository"
 import * as paymentMethods from "../repositories/paymentRepository";
 import * as rechargeMethods from "../repositories/rechargeRepository";
 import { faker } from '@faker-js/faker';
-import dayjs from "dayjs";
 import { handleError } from "../middlewares/cardErrorHandler";
-const Cryptr = require('cryptr');
-const cryptr = new Cryptr('myTotallySecretKey');
-
-function cardName(nome:string) {
-    const nome2 = nome.split(' ');
-    const nome3:string[] = [];
-  
-    for(let i = 0; i < nome2.length;i++){
-      if(i===0) nome3.push(nome2[i].toUpperCase())
-      if(i !== 0 && i !== nome2.length-1){
-        if(nome2[i].length >= 3){
-          nome3.push(nome2[i][0].toUpperCase())
-        }
-      }
-      if(i === nome2.length-1) nome3.push(nome2[i].toUpperCase())
-    }
-    return nome3.join(' ')
-}
-
-function generateDate(){
-  const date = dayjs(Date.now(),'dd/mm/yyyy').format('MM/YY');
-  const expireDate = (Number(date[date.length-2] + date[date.length-1]) + 5).toString();
-  
-  return date.slice(0, -2) + expireDate;
-}
-
-export function expiredCard(date:string){
-  const currentDate = dayjs(Date.now(),'dd/mm/yyyy').format('MM/YY');
-  const months = Number(currentDate[0] + currentDate[1]);
-  const years = Number(currentDate[3] + currentDate[4]);
-  const cardMonths = Number(date[0] + date[1]);
-  const cardYears = Number(date[3] + date[4]);
-
-  if(years > cardYears) return true;
-  if(months > cardMonths && years === cardYears) return true;
-  return false;
-}
-
-function verifyPass(password:any){
-  const reg = new RegExp('^[0-9]{4}$')
-
-  return reg.test(password);
-}
+import { expiredCard, cardName, generateDate, verifyPass } from "../utils/cardUtils";
+import { encrypt,decrypt } from "../utils/passwordUtils";
 
 export async function createCard(apiKey:any, 
     employeeId:number, 
@@ -68,7 +26,7 @@ export async function createCard(apiKey:any,
     const number: string = faker.finance.creditCardNumber('####-####-####-###L');
     const expirationDate = generateDate();
     const CVC:string = faker.finance.creditCardCVV();
-    const securityCode = cryptr.encrypt(CVC);
+    const securityCode = encrypt(CVC);
 
     const cardData:cardMethods.CardInsertData = {
         employeeId,
@@ -87,15 +45,15 @@ export async function createCard(apiKey:any,
 
 export async function activateCard(id:number, cvc:string, password:string) {
   const checkCard = await cardMethods.findById(id);
-  console.log(cryptr.decrypt(checkCard.securityCode));
+  console.log(decrypt(checkCard.securityCode));
   
   if(!checkCard) throw handleError(404,`Card not registered!`)
-  if(cryptr.decrypt(checkCard.securityCode) !== cvc) throw handleError(401,"Wrong CVC!");
+  if(decrypt(checkCard.securityCode) !== cvc) throw handleError(401,"Wrong CVC!");
   if(expiredCard(checkCard.expirationDate)) throw handleError(401,"This card has expired!");
   if(checkCard.password) throw handleError(409,"This card is active!");
   if(!verifyPass(password)) throw handleError(401,"Wrong password!");
 
-  const encryptedPass = cryptr.encrypt(password)
+  const encryptedPass = encrypt(password)
 
   await cardMethods.update(id,encryptedPass);
 }
@@ -106,9 +64,9 @@ export async function getCards(id:number, password:string[]){
     const { rows:card } = await cardMethods.findByEmployeeId(id);
     if(card.length === 0) throw handleError(404,"This user doesn't have registered cards!");
     for(let i = 0; i < card.length;i++){
-      if(password.includes(cryptr.decrypt(card[i].password))){
+      if(password.includes(decrypt(card[i].password))){
         delete card[i].password;
-        card[i].securityCode = cryptr.decrypt(card[i].securityCode)
+        card[i].securityCode = decrypt(card[i].securityCode)
         result.push(card[i]);
       }
     }
@@ -160,7 +118,7 @@ export async function blockCard(id:number, password:string) {
 
   if(!card) throw handleError(404,"Card not registered!");
   if(card.password === '') throw handleError(401,"Card wasn't activated!");
-  if(cryptr.decrypt(card.password) !== password) throw handleError(401,"Wrong password!");
+  if(decrypt(card.password) !== password) throw handleError(401,"Wrong password!");
   if(card.isBlocked) throw handleError(409,"Card already blocked!");
   if(expiredCard(card.expirationDate)) throw handleError(401,"This card has expired!");
 
@@ -172,7 +130,7 @@ export async function unblockCard(id:number, password:string) {
 
   if(!card) throw handleError(404,"Card not registered!");
   if(card.password === '') throw handleError(401,"Card wasn't activated!");
-  if(cryptr.decrypt(card.password) !== password) throw handleError(401,"Wrong Password!");
+  if(decrypt(card.password) !== password) throw handleError(401,"Wrong Password!");
   if(!card.isBlocked) throw handleError(409,"Card is already active!");
   if(expiredCard(card.expirationDate)) throw handleError(401,"This card has expired!");
 

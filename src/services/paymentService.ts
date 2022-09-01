@@ -1,10 +1,10 @@
 import * as paymentMethods from "../repositories/paymentRepository";
 import * as cardMethods from "../repositories/cardRepository";
 import * as busMethods from "../repositories/businessRepository";
-import { expiredCard,getTransactions } from "./cardService";
+import { getTransactions } from "./cardService";
+import { expiredCard } from "../utils/cardUtils";
 import { handleError } from "../middlewares/cardErrorHandler";
-const Cryptr = require('cryptr');
-const cryptr = new Cryptr('myTotallySecretKey');
+import { decrypt } from "../utils/passwordUtils";
 
 export async function purchase(posId:number, id:number, password:string, amount:number){
     const card = await cardMethods.findById(id);
@@ -12,7 +12,7 @@ export async function purchase(posId:number, id:number, password:string, amount:
     if(!card) throw handleError(401,"Card not registered!");
     if(card.password === '') 
     throw handleError(401,"Purchase failed, card wasn't activated!");
-    if(cryptr.decrypt(card.password) !== password) 
+    if(decrypt(card.password) !== password) 
     throw handleError(401,"Purchase failed, wrong password!");
     if(card.isBlocked) 
     throw handleError(401,"Purchase failed, card is blocked!");

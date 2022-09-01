@@ -2,7 +2,7 @@ import * as rechargeMethods from "../repositories/rechargeRepository";
 import { findByApiKey } from "../repositories/companyRepository";
 import { handleError } from "../middlewares/cardErrorHandler";
 import * as cardMethods from "../repositories/cardRepository";
-import { expiredCard } from "./cardService";
+import { expiredCard } from "../utils/cardUtils";
 
 export async function recharge(apiKey:string, id:number, amount:number) {
     const checkApiKey = await findByApiKey(apiKey);
