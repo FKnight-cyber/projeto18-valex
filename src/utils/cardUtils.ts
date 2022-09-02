@@ -41,3 +41,8 @@ export function verifyPass(password:any){
   
     return reg.test(password);
 }
+
+export function format(str:string){
+  return str.slice(0,4)+'-'+str.slice(4,8)+'-'+str.slice(8,12)+'-'+str.slice(12,16);
+}
+

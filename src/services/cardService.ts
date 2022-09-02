@@ -44,13 +44,12 @@ export async function createCard(apiKey:any,
 }
 
 export async function activateCard(id:number, cvc:string, password:string) {
-  const checkCard = await cardMethods.findById(id);
-  console.log(decrypt(checkCard.securityCode));
+  const card = await cardMethods.findById(id);
   
-  if(!checkCard) throw handleError(404,`Card not registered!`)
-  if(decrypt(checkCard.securityCode) !== cvc) throw handleError(401,"Wrong CVC!");
-  if(expiredCard(checkCard.expirationDate)) throw handleError(401,"This card has expired!");
-  if(checkCard.password) throw handleError(409,"This card is active!");
+  if(!card) throw handleError(404,`Card not registered!`)
+  if(decrypt(card.securityCode) !== cvc) throw handleError(401,"Wrong CVC!");
+  if(expiredCard(card.expirationDate)) throw handleError(401,"This card has expired!");
+  if(card.password) throw handleError(409,"This card is active!");
   if(!verifyPass(password)) throw handleError(401,"Wrong password!");
 
   const encryptedPass = encrypt(password)

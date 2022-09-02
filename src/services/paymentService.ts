@@ -1,34 +1,38 @@
 import * as paymentMethods from "../repositories/paymentRepository";
 import * as cardMethods from "../repositories/cardRepository";
-import * as busMethods from "../repositories/businessRepository";
-import { getTransactions } from "./cardService";
-import { expiredCard } from "../utils/cardUtils";
-import { handleError } from "../middlewares/cardErrorHandler";
-import { decrypt } from "../utils/passwordUtils";
+import * as businessMethods from "../repositories/businessRepository";
+import { format } from "../utils/cardUtils";
+import { validateCardPayment } from "../middlewares/validateCard";
+import { validateStore } from "../middlewares/validateStore";
 
 export async function purchase(posId:number, id:number, password:string, amount:number){
     const card = await cardMethods.findById(id);
 
-    if(!card) throw handleError(401,"Card not registered!");
-    if(card.password === '') 
-    throw handleError(401,"Purchase failed, card wasn't activated!");
-    if(decrypt(card.password) !== password) 
-    throw handleError(401,"Purchase failed, wrong password!");
-    if(card.isBlocked) 
-    throw handleError(401,"Purchase failed, card is blocked!");
-    if(expiredCard(card.expirationDate)) 
-    throw handleError(401,"Purchase failed, card has expired!");
+    await validateCardPayment(card, null, password, amount);
 
-    const store = await busMethods.findById(posId);
+    const store = await businessMethods.findById(posId);
 
-    if(!store) throw handleError(404,"Purchase failed, store not registered!");
-    if(store.type !== card.type) 
-    throw handleError(409,"Purchase failed, this store doesn't accept this type of card!");
-    
-
-    const { balance } : { balance:number }  = await getTransactions(id);
-
-    if(balance - amount < 0) throw handleError(406,"Purchase failed, insufficient balance!");
+    await validateStore(store, card);
 
     await paymentMethods.insert(id,posId,amount);
-} 
+}
+
+export async function purchaseOnline(posId:number,
+    number:string, 
+    name:string, 
+    expirationDate:string, 
+    cvc:string, 
+    amount:number) {
+
+    const formatedNumber:string = format(number);
+
+    const card = await cardMethods.findByCardDetails(formatedNumber,name,expirationDate);
+
+    await validateCardPayment(card, cvc, null, amount);
+
+    const store = await businessMethods.findById(posId);
+
+    await validateStore(store, card);
+
+    await paymentMethods.insert(card.id,posId,amount);
+}

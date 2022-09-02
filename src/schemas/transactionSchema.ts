@@ -28,6 +28,22 @@ const transactionValidation = (code:number) => {
 
             next();
         }
+
+        if(code === 3){
+            const transactionSchema = joi.object({
+                number: joi.string().min(16).max(16).required(),
+                name: joi.string().required(),
+                expirationDate: joi.string().min(5).max(5).required(),
+                cvc: joi.string().min(3).max(3).required(),
+                amount: joi.number().min(1).required()
+            });
+
+            const { error } = transactionSchema.validate(req.body,{abortEarly:false});
+
+            if(error) return res.status(422).send(error.details.map(detail => detail.message));
+
+            next();
+        }
     }
 }
 
