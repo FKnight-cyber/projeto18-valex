@@ -5,7 +5,7 @@ import * as paymentMethods from "../repositories/paymentRepository";
 import * as rechargeMethods from "../repositories/rechargeRepository";
 import { faker } from '@faker-js/faker';
 import { handleError } from "../middlewares/cardErrorHandler";
-import { expiredCard, cardName, generateDate, verifyPass } from "../utils/cardUtils";
+import { expiredCard, cardName, generateDate, verifyPass, fillCardInfo } from "../utils/cardUtils";
 import { encrypt,decrypt } from "../utils/passwordUtils";
 
 export async function createCard(apiKey:any, 
@@ -27,20 +27,42 @@ export async function createCard(apiKey:any,
     const expirationDate = generateDate();
     const CVC:string = faker.finance.creditCardCVV();
     const securityCode = encrypt(CVC);
+    const password = ''
+    const isVirtual = false;
+    const originalCardId = null;
+    const isBlocked = true;
 
-    const cardData:cardMethods.CardInsertData = {
-        employeeId,
-        number,
-        cardholderName,
-        securityCode,
-        expirationDate,
-        password: '',
-        isVirtual: true,
-        isBlocked: true,
-        type,
-      } ; 
+    const cardData = fillCardInfo(employeeId, number, cardholderName, securityCode,
+      expirationDate, password, isVirtual, originalCardId, isBlocked, type)
 
-      await cardMethods.insert(cardData)
+    await cardMethods.insert(cardData)
+}
+
+export async function createVirtucalCard(id:number, password:string) {
+
+  const card = await cardMethods.findById(id);
+
+  if(!card) throw handleError(404,`Card not registered!`)
+
+  if(expiredCard(card.expirationDate)) throw handleError(401,"This card has expired!");
+
+  if(!verifyPass(password)) throw handleError(422,"Password must be only numbers!");
+
+  if(decrypt(card.password) !== password) throw handleError(401,"Wrong password!");
+
+  const cardholderName:string = card.cardholderName;
+  const number:string = faker.finance.creditCardNumber('mastercard');
+  const expirationDate = generateDate();
+  const CVC:string = faker.finance.creditCardCVV();
+  const securityCode = encrypt(CVC);
+  const isVirtual = true;
+  const originalCardId = id;
+  const isBlocked = false;
+
+  const cardData = fillCardInfo(card.employeeId, number, cardholderName, securityCode,
+    expirationDate, card.password, isVirtual, originalCardId, isBlocked, card.type)
+
+  await cardMethods.insert(cardData)
 }
 
 export async function activateCard(id:number, cvc:string, password:string) {

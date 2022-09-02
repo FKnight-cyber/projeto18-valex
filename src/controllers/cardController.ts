@@ -14,7 +14,16 @@ export async function createCard(req:Request,res:Response) {
 
     await CardService.createCard(apiKey,id,type);
 
-    return res.sendStatus(201);
+    return res.status(201).send({message: "Card created!"});
+}
+
+export async function createVirtualCard(req:Request,res:Response){
+    const id:number = Number(req.params.id);
+    const { password } : { password:string } = req.body;
+
+    await CardService.createVirtucalCard(id,password);
+
+    return res.status(201).send({message: "Virtual card created!"});
 }
 
 export async function activateCard(req:Request,res:Response){

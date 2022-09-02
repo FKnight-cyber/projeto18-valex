@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import * as cardMethods from "../repositories/cardRepository";
 
 export function expiredCard(date:string){
     const currentDate = dayjs(Date.now(),'dd/mm/yyyy').format('MM/YY');
@@ -44,5 +45,31 @@ export function verifyPass(password:any){
 
 export function format(str:string){
   return str.slice(0,4)+'-'+str.slice(4,8)+'-'+str.slice(8,12)+'-'+str.slice(12,16);
+}
+
+export function fillCardInfo(employeeId:number, number:string,
+  cardholderName:string,
+  securityCode:string,
+  expirationDate:string,
+  password:string,
+  isVirtual:boolean,
+  originalCardId:any,
+  isBlocked:boolean,
+  type:cardMethods.TransactionTypes){
+
+  const cardData:cardMethods.CardInsertData = {
+    employeeId,
+    number,
+    cardholderName,
+    securityCode,
+    expirationDate,
+    password,
+    isVirtual,
+    originalCardId,
+    isBlocked,
+    type
+  } ; 
+
+  return cardData;
 }
 

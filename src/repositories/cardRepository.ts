@@ -16,6 +16,7 @@ export interface Card {
   expirationDate: string;
   password?: string;
   isVirtual: boolean;
+  originalCardId?: any;
   isBlocked: boolean;
   type: TransactionTypes;
 }
@@ -86,6 +87,7 @@ export async function insert(cardData: CardInsertData) {
     expirationDate,
     password,
     isVirtual,
+    originalCardId,
     isBlocked,
     type,
   } = cardData;
@@ -93,8 +95,8 @@ export async function insert(cardData: CardInsertData) {
   connection.query(
     `
     INSERT INTO cards ("employeeId", number, "cardholderName", "securityCode",
-      "expirationDate", password, "isVirtual", "isBlocked", type)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      "expirationDate", password, "isVirtual","originalCardId", "isBlocked", type)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
   `,
     [
       employeeId,
@@ -104,6 +106,7 @@ export async function insert(cardData: CardInsertData) {
       expirationDate,
       password,
       isVirtual,
+      originalCardId,
       isBlocked,
       type,
     ]
