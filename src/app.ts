@@ -9,6 +9,10 @@ dotenv.config();
 
 const app = express();
 
+app.get("/", (req, res) => {
+    res.send("Express on Vercel");
+  });
+
 app.use(json());
 app.use(cors());
 app.use(router);
@@ -17,3 +21,5 @@ app.use(cardErrorHandler);
 const PORT:number = Number(process.env.PORT) || 5000;
 
 app.listen(PORT, () => console.log("Server online!"));
+
+module.exports = app;
