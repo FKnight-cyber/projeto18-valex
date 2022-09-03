@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createCard,activateCard,getCards,getTransactions,
-unblockCard, blockCard, createVirtualCard } from "../controllers/cardController";
+unblockCard, blockCard, createVirtualCard, deleteVirtualCard } from "../controllers/cardController";
 import cardValidation from "../schemas/cardSchema";
 
 const cardRouter = Router();
@@ -12,5 +12,6 @@ cardRouter.put('/mycard-block/:id',cardValidation(4),blockCard);
 cardRouter.put('/mycard-unblock/:id',cardValidation(4),unblockCard);
 cardRouter.get('/mycards',cardValidation(3),getCards);
 cardRouter.get('/mycard-transactions/:id',getTransactions);
+cardRouter.delete('/myvirtualcard/:id',cardValidation(4),deleteVirtualCard)
 
 export default cardRouter;

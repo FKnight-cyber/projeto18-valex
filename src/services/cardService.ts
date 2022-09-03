@@ -7,6 +7,7 @@ import { faker } from '@faker-js/faker';
 import { handleError } from "../middlewares/cardErrorHandler";
 import { expiredCard, cardName, generateDate, verifyPass, fillCardInfo } from "../utils/cardUtils";
 import { encrypt,decrypt } from "../utils/passwordUtils";
+import { number } from "joi";
 
 export async function createCard(apiKey:any, 
     employeeId:number, 
@@ -68,7 +69,8 @@ export async function createVirtucalCard(id:number, password:string) {
 export async function activateCard(id:number, cvc:string, password:string) {
   const card = await cardMethods.findById(id);
   
-  if(!card) throw handleError(404,`Card not registered!`)
+  if(!card) throw handleError(404,`Card not registered!`);
+  if(card.isVirtual) throw handleError(401,`Can't activate virtual cards!`)
   if(decrypt(card.securityCode) !== cvc) throw handleError(401,"Wrong CVC!");
   if(expiredCard(card.expirationDate)) throw handleError(401,"This card has expired!");
   if(card.password) throw handleError(409,"This card is active!");
@@ -96,6 +98,10 @@ export async function getCards(id:number, password:string[]){
 }
 
 export async function getTransactions(id:number) {
+
+  const card = await cardMethods.findById(id);
+  
+  if(!card) throw handleError(404,`Card not registered!`);
 
   const recharges = await rechargeMethods.findByCardId(id);
 
@@ -156,4 +162,16 @@ export async function unblockCard(id:number, password:string) {
   if(expiredCard(card.expirationDate)) throw handleError(401,"This card has expired!");
 
   await cardMethods.unblockCard(id);
+}
+
+export async function deleteVirtualCard(id:number, password:string) {
+  const virtualCard = await cardMethods.findById(id);
+
+  if(!virtualCard) throw handleError(404,"Card not registered!");
+
+  if(virtualCard.originalCardId === null) throw handleError(401,"Can't delete physical cards!");
+
+  if(decrypt(virtualCard.password) !== password) throw handleError(401,"Wrong Password!");
+
+  await cardMethods.remove(id)
 }

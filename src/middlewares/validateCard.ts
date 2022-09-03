@@ -25,8 +25,14 @@ export async function validateCardPayment(card:any, cvc:any, password:any,amount
       if(decrypt(card.password) !== password) 
         throw handleError(401,"Purchase failed, wrong password!");
     }
+
+    let id = card.id;
     
-    const { balance } : { balance:number }  = await getTransactions(card.id);
+    if(card.originalCardId !== null){
+      id = card.originalCardId;
+    }
+    
+    const { balance } : { balance:number }  = await getTransactions(id);
 
     if(balance - amount < 0) throw handleError(406,"Purchase failed, insufficient balance!");
 }

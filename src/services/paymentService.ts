@@ -4,9 +4,12 @@ import * as businessMethods from "../repositories/businessRepository";
 import { format } from "../utils/cardUtils";
 import { validateCardPayment } from "../middlewares/validateCard";
 import { validateStore } from "../middlewares/validateStore";
+import { handleError } from "../middlewares/cardErrorHandler";
 
 export async function purchase(posId:number, id:number, password:string, amount:number){
     const card = await cardMethods.findById(id);
+
+    if(card.isVirtual) throw handleError(401,"Can't use virtual cards to buy in POS!");
 
     await validateCardPayment(card, null, password, amount);
 
@@ -34,5 +37,5 @@ export async function purchaseOnline(posId:number,
 
     await validateStore(store, card);
 
-    await paymentMethods.insert(card.id,posId,amount);
+    await paymentMethods.insert(card.originalCardId,posId,amount);
 }

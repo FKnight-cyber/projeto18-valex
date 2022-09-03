@@ -67,3 +67,12 @@ export async function unblockCard(req:Request, res:Response) {
 
     return res.status(200).send({message: "Card unblocked!"});
 }
+
+export async function deleteVirtualCard(req:Request, res:Response) {
+    const id:number = Number(req.params.id);
+    const { password } : { password:string } = req.body;
+
+    await CardService.deleteVirtualCard(id,password);
+
+    return res.status(200).send({message: "Card deleted!"});
+}

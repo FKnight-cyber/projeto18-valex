@@ -12,6 +12,7 @@ export async function recharge(apiKey:string, id:number, amount:number) {
     const card = await cardMethods.findById(id);
 
     if(!card) throw handleError(404,"Card not registered!");
+    if(card.isVirtual) throw handleError(401,"Can't recharge virtual cards!");
     if(card.isBlocked) throw handleError(401,"Can't recharge blocked card!");
     if(expiredCard(card.expirationDate)) throw handleError(401,"Expired card, can't recharge!");
 
