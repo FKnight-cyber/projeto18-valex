@@ -11,8 +11,7 @@
     "express-async-errors": "^3.1.1",
     "joi": "^17.6.0",
     "parse": "^3.4.4",
-    "pg": "^8.8.0",
-    "vercel": "^28.2.2"
+    "pg": "^8.8.0"
   },
   "name": "projeto18-valex",
   "version": "1.0.0",
@@ -30,8 +29,7 @@
     "typescript": "^4.8.2"
   },
   "scripts": {
-    "start": "vercel dev",
-    "deploy": "vercel deploy --prod",
+    "start": "ts-node ./src/app.ts",
     "dev": "nodemon ./src/app.ts"
   },
   "keywords": [],
