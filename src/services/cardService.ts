@@ -119,6 +119,7 @@ export async function getTransactions(id:number) {
   });
 
   const payments = await paymentMethods.findByCardId(id);
+  
   if(payments.length === 0){
     return {
       balance,
